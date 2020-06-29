@@ -42,11 +42,17 @@ def extract_info(url):
 	website = soup.find('a', 'button-startup-website-link')['href']
 	mission = soup.find('p', 'startup-mission').string
 	industry = industry_tag.string
-	country = country_flag['src'].split('-')[-2]
 	year_founded = info[0].string
 	funding_type = info[1].string
 	total_funding = info[2].string		
 	employees = info[3].string
+
+	# Country is invalid for mu-space because country_flag is empty
+	# Also, I just noticed a country named flag. I looked into the site and discover that it's spain
+	try:
+		country = country_flag['src'].split('-')[-2]
+	except:
+		country = 'unknown'
 	print('Extraction from {} successful'.format(url))
 	return (name, country, website, industry, description, mission, employees, year_founded, funding_type, total_funding, url)
 
@@ -58,7 +64,7 @@ def fetch_urls():
 	soup = BeautifulSoup(res.text, 'lxml')
 
 	print('Soup made')
-	url_tag = soup.find_all('a', 'home-startups-link-block', limit=10)		# Remove the limit parameter to truly find_all
+	url_tag = soup.find_all('a', 'home-startups-link-block')
 	urls = []
 	print('Got the tags')
 
@@ -75,11 +81,14 @@ def space_xl():
 	ws.append(('name', 'country', 'website', 'industry', 'description', 'mission', 'employees', 'year_founded', 'funding_type', 'total_funding', 'url'))
 
 	print('Go and fetch URLs')
-	for url in fetch_urls():
-		print('Go and extract info from', url)
-		ws.append(extract_info(url))
+	urls = fetch_urls()
+	num = len(urls)
+
+	for i in range(num):
+		print('{}/{} Go and extract info from'.format(i+1, num, urls[i]))
+		ws.append(extract_info(urls[i]))
 
 	wb.save('datasets/spacebandits.xlsx')
 	print('spacebandits.xlsx successfully saved in datasets')
 
-space_csv()
+space_xl()
